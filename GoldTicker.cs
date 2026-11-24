@@ -67,7 +67,7 @@ namespace GoldTicker
 
     sealed class PollingCadence
     {
-        public const int NormalMilliseconds = 15000;
+        public const int NormalMilliseconds = 10000;
         public const int SlowMilliseconds = 300000;
         public const int SamePriceThreshold = 5;
         decimal? lastPrice;
@@ -357,8 +357,8 @@ namespace GoldTicker
                     using (var format = new StringFormat { Alignment = StringAlignment.Far })
                         g.DrawString(values[i], normal, valueBrush, rect, format);
                 }
-                string status = failed ? (slowQuery ? "查询失败 · 每 5 分钟重试" : "查询失败 · 每 15 秒重试") : q == null ? "正在获取报价…" :
-                    slowQuery ? "报价及行情时间未更新 · 每 5 分钟查询" : q.IsOld ? "每 15 秒查询 · 上游暂无新行情" : "每 15 秒查询";
+                string status = failed ? (slowQuery ? "查询失败 · 每 5 分钟重试" : "查询失败 · 每 10 秒重试") : q == null ? "正在获取报价…" :
+                    slowQuery ? "报价及行情时间未更新 · 每 5 分钟查询" : q.IsOld ? "每 10 秒查询 · 上游暂无新行情" : "每 10 秒查询";
                 g.DrawString(status, small, muted, 18, 205);
                 g.DrawString(q == null ? "行情时间：--" : "行情时间：" + q.Time.ToString("MM-dd HH:mm:ss"), small, muted, 18, 226);
                 string queryTime = failed ? (lastAttempt.HasValue ? lastAttempt.Value.ToString("HH:mm:ss") : "--") :
@@ -509,7 +509,7 @@ namespace GoldTicker
             interaction.Interval = 100;
             interaction.Tick += delegate { TickInteraction(); };
             Shown += async delegate { tray.Visible = true; PositionOnTaskbar(); interaction.Start(); refresh.Start(); await UpdateQuote(); };
-            Diagnostics.Write("启动，正常15秒查询，连续5次价格及行情时间相同后改为5分钟查询");
+            Diagnostics.Write("启动，正常10秒查询，连续5次价格及行情时间相同后改为5分钟查询");
         }
         protected override bool ShowWithoutActivation { get { return true; } }
         protected override CreateParams CreateParams
@@ -598,7 +598,7 @@ namespace GoldTicker
             if (previousInterval != cadence.Interval)
             {
                 refresh.Stop(); refresh.Interval = cadence.Interval; refresh.Start();
-                Diagnostics.Write(cadence.IsSlow ? "连续5次价格及行情时间相同，切换为5分钟查询" : "价格或行情时间变化，恢复15秒查询");
+                Diagnostics.Write(cadence.IsSlow ? "连续5次价格及行情时间相同，切换为5分钟查询" : "价格或行情时间变化，恢复10秒查询");
             }
             AccessibleName = quote == null ? "浙商金价，暂无报价" : "浙商金价 " + quote.Price.ToString("F2") + " 元每克";
             tray.Text = quote == null ? "浙商金价 · 更新失败" : "浙商 " + quote.Price.ToString("F2") + " | " +

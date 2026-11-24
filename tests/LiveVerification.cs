@@ -16,7 +16,7 @@ namespace GoldTicker
         {
             // 直接测试频率判断的业务输入，不替换或模拟网络接口。
             var cadence = new PollingCadence();
-            Check(cadence.Interval == 15000, "启动频率应为15秒");
+            Check(cadence.Interval == 10000, "启动频率应为10秒");
             for (int i = 0; i < 4; i++) cadence.Observe(price, quoteTime);
             Check(!cadence.IsSlow, "只有4次相同报价时不应降频");
             cadence.Observe(price, quoteTime);
@@ -24,11 +24,11 @@ namespace GoldTicker
             cadence.Observe(price, quoteTime);
             Check(cadence.IsSlow, "持续相同应保持5分钟");
             cadence.Failed();
-            Check(cadence.IsSlow, "请求失败不应恢复15秒");
+            Check(cadence.IsSlow, "请求失败不应恢复10秒");
             cadence.Observe(price, quoteTime);
             Check(cadence.IsSlow, "失败后同价应保持5分钟");
             cadence.Observe(price + 0.01m, quoteTime);
-            Check(cadence.Interval == 15000, "价格变化应立即恢复15秒");
+            Check(cadence.Interval == 10000, "价格变化应立即恢复10秒");
             cadence = new PollingCadence();
             for (int i = 0; i < 4; i++) cadence.Observe(price, quoteTime);
             cadence.Failed();
@@ -44,7 +44,7 @@ namespace GoldTicker
             cadence.Observe(price + 0.01m, quoteTime);
             Check(cadence.IsSlow, "新价格连续5次相同应再次降频");
             cadence.Observe(price + 0.01m, quoteTime.AddSeconds(15));
-            Check(!cadence.IsSlow, "同价但行情时间更新应恢复15秒");
+            Check(!cadence.IsSlow, "同价但行情时间更新应恢复10秒");
             for (int i = 2; i <= 10; i++) cadence.Observe(price + 0.01m, quoteTime.AddSeconds(15 * i));
             Check(!cadence.IsSlow, "同价且行情时间持续更新不能降频");
             // 重放实际误降频日志：5次同价，但每次行情时间都前进15秒。
@@ -76,8 +76,8 @@ namespace GoldTicker
                     try
                     {
                         double started = elapsed.Elapsed.TotalSeconds;
-                        if (previousStart >= 0 && (started - previousStart < 14 || started - previousStart > 18))
-                            throw new InvalidOperationException("定时器请求间隔不在 14~18 秒范围内");
+                        if (previousStart >= 0 && (started - previousStart < 9 || started - previousStart > 13))
+                            throw new InvalidOperationException("定时器请求间隔不在 9~13 秒范围内");
                         previousStart = started;
                         Quote q = await Feed.Fetch();
                         if (!firstPrice.HasValue)
@@ -105,7 +105,7 @@ namespace GoldTicker
                                 }
                             }
                             lines.Add("同一报价绘制验证通过：正常绿色，第5次价格及行情时间相同红色，同价时间更新恢复绿色。");
-                            lines.Add("频率逻辑测试通过：5次价格及时间阈值、任一变化恢复15秒、同价时间更新不降频及实际日志重放、失败中断计数、低频失败保持5分钟。");
+                            lines.Add("频率逻辑测试通过：5次价格及时间阈值、任一变化恢复10秒、同价时间更新不降频及实际日志重放、失败中断计数、低频失败保持5分钟。");
                         }
                         else if (q.Price != firstPrice.Value || q.Time != firstQuoteTime) allSame = false;
                         cadence.Observe(q.Price, q.Time);
@@ -129,7 +129,7 @@ namespace GoldTicker
                             if (Native.IsZoomed(foreground) && Native.IsFullscreen(foreground, Screen.PrimaryScreen.Bounds))
                                 throw new InvalidOperationException("最大化窗口被误判成全屏");
                             lines.Add("当前前台最大化=" + Native.IsZoomed(foreground) + "；全屏判断=" + Native.IsFullscreen(foreground, Screen.PrimaryScreen.Bounds));
-                            lines.Add("15 秒 WinForms 定时器、5 次真实请求、字段校验通过。");
+                            lines.Add("10 秒 WinForms 定时器、5 次真实请求、字段校验通过。");
                             timer.Stop(); loop.ExitThread();
                         }
                     }
